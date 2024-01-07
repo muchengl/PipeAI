@@ -1,13 +1,13 @@
-package org.aipipe;
+package org.pipeai;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AipipeApplication {
+public class PipeAiApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AipipeApplication.class, args);
+        SpringApplication.run(PipeAiApplication.class, args);
     }
 
 }

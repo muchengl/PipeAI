@@ -8,11 +8,11 @@
         <version>3.2.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>org.aipipe</groupId>
-    <artifactId>aipipe</artifactId>
+    <groupId>org.pipeai</groupId>
+    <artifactId>pipeai</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>aipipe</name>
-    <description>aipipe</description>
+    <name>pipeai</name>
+    <description>pipeai</description>
     <properties>
         <java.version>17</java.version>
     </properties>

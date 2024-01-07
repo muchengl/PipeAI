@@ -1,4 +1,4 @@
-package org.aipipe.core.controller;
+package org.pipeai.core.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
