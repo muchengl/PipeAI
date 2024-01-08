@@ -2,6 +2,8 @@
 Use a pipeline to connect all AI platforms!<br>
 No need to switch between different AI platforms, no need to learn how to use different AI platforms. What you need is just PipeAI.
 
+![logo](./document/images/logo-tmp.png)
+
 ## Dev Roadmap：
 **Phase1 PipeAI includes：**<br>
 - Text: ChatGPT-3.5 ｜ChatGPT-4<br>
