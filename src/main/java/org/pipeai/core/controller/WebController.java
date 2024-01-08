@@ -7,8 +7,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/pipe")
 public class WebController {
 
-    @RequestMapping("/index")
-    public String index(){
-        return "pipeline";
+//    @RequestMapping("/index")
+//    public String index(){
+//        return "pipeline";
+//    }
+
+    @RequestMapping("/editor")
+    public String pipe(){
+        return "pipe";
+    }
+
+    @RequestMapping("/test")
+    public String test(){
+        return "test";
     }
 }

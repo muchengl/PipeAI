@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="../js/jquery-3.4.1.js"></script>
+    <script src="../js/mxClient.min.js"></script>
+
+    <title>PipeAI</title>
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 0, 0, 0.05) 75%, rgba(0, 0, 0, 0.05) 76%, transparent 77%, transparent),
+            linear-gradient(90deg, transparent 24%, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 0, 0, 0.05) 75%, rgba(0, 0, 0, 0.05) 76%, transparent 77%, transparent);
+            background-size: 35px 35px;
+        }
+
+        .toolbar {
+            background-color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+        }
+
+        .divider {
+            border-left: 1px solid #ddd;
+            height: 40px;
+            margin: 0 20px;
+        }
+
+        .toolbar-button {
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        .toolbar-button img{
+            width: 20px;
+            height: 20px;
+        }
+
+        .toolbar-button:hover {
+            background-color: #f2f2f2;
+        }
+
+        .footer-bar {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+        }
+        .list-item img {
+            margin-right: 10px;
+        }
+        .list-item.selected {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<!--JS for pipeline-->
+<script>
+    var graph;
+    var keyHandler;
+    function main(container)
+    {
+        // Checks if the browser is supported
+        if (!mxClient.isBrowserSupported())
+        {
+            mxUtils.error('Browser is not supported!', 200, false);
+        }
+        else
+        {
+            // Creates the graph inside the given container
+            graph = new mxGraph(container);
+            // graph.setConnectable(true);
+            graph.setMultigraph(false);
+
+            // Enables rubberband selection
+            // new mxRubberband(graph);
+
+            graph.addListener(mxEvent.DOUBLE_CLICK, function(sender, evt) {
+                var cell = evt.getProperty('cell');
+                if (cell != null) {
+                    var newText = prompt('Edit Name:', cell.value);
+                    if (newText != null) {
+                        graph.getModel().setValue(cell, newText);
+                    }
+                }
+            });
+            // graph.addListener(mxEvent.ADD_CELLS, function(sender, evt) {
+            //     var cells = evt.getProperty('cells');
+            //     console.log("new cell");
+            //
+            //     cells.forEach(function(cell) {
+            //         if (cell.isEdge()) {
+            //             console.log("new edge");
+            //
+            //             cell.addListener(mxEvent.MOUSE_DOWN, function(sender, evt) {
+            //                 //alert("run")
+            //                 // var me = evt.getProperty('event');
+            //                 // var cell = evt.getProperty('cell');
+            //                 // if (me.button == 2) {
+            //                 //     console.log("click");
+            //                 // }
+            //             });
+            //         }
+            //     });
+            // });
+
+            enableGuides();
+            disableConnectToEdge();
+
+        }
+    }
+
+    function enableGuides(){
+        var graphHandler = graph.graphHandler;
+
+        graphHandler.guidesEnabled = true;
+
+        var guide = new mxGuide(graph, new mxGuideState(graph));
+        guide.setGuideColor('#FF0000');
+        guide.setGuideWidth(1);
+
+        graph.setGridEnabled(true);
+        graph.setGridSize(10);
+        graph.view.gridColor = '#CCCCCC';
+    }
+
+    function disableConnectToEdge() {
+        graph.isValidTarget = function(cell) {
+            return cell.value === 'inputText' || cell.value === 'inputFile';
+        };
+
+        graph.isValidSource = function(cell) {
+            return cell.value === 'outputText' || cell.value === 'outputFile';
+        };
+    }
+
+
+    function addVertex(title) {
+        var parent = graph.getDefaultParent();
+        graph.getModel().beginUpdate();
+        try {
+            var x = Math.random() * 300;
+            var y = Math.random() * 300;
+
+            // add rectangle
+            var rectangle = graph.insertVertex(parent, 'rectangle', title, x, y, 100, 50);
+
+            // add points to rectangle
+            var portStyleText = 'shape=ellipse;' +
+                'perimeter=ellipsePerimeter;' +
+                'fillColor=#FFFFFF;' +
+                'strokeColor=rgba(153,0,0,1);' +
+                'strokeWidth=1;' +
+                'fontColor=rgba(0,255,0,0);' +
+                'fontSize=12;' +
+                'fontFamily=Arial;' +
+                'align=center;' +
+                'verticalAlign=middle;' +
+                'spacingTop=2;' +
+                'spacingRight=4;';
+
+            var portStyleFile = 'shape=ellipse;' +
+                'perimeter=ellipsePerimeter;' +
+                'fillColor=#FFFFFF;' +
+                'strokeColor=rgba(0,102,51,1);' +
+                'strokeWidth=1;' +
+                'fontColor=rgba(255,255,0,0);' +
+                'fontSize=12;' +
+                'fontFamily=Arial;' +
+                'align=center;' +
+                'verticalAlign=middle;' +
+                'spacingTop=2;' +
+                'spacingRight=4;';
+
+
+            var portInputText = graph.insertVertex(rectangle, 'inputText', 'inputText', 0, 0.25, 8, 8, portStyleText);
+            portInputText.geometry.offset = new mxPoint(-4, -4);
+            portInputText.geometry.relative = true;
+
+            var portInputFile = graph.insertVertex(rectangle, 'inputFile', 'inputFile', 0, 0.75, 8, 8, portStyleFile);
+            portInputFile.geometry.offset = new mxPoint(-4, -4);
+            portInputFile.geometry.relative = true;
+
+            var portOutputText = graph.insertVertex(rectangle, 'outputText', 'outputText', 1, 0.25, 8, 8, portStyleText);
+            portOutputText.geometry.offset = new mxPoint(-4, -4);
+            portOutputText.geometry.relative = true;
+
+            var portOutputFile = graph.insertVertex(rectangle, 'outputFile', 'outputFile', 1, 0.75, 8, 8, portStyleFile);
+            portOutputFile.geometry.offset = new mxPoint(-4, -4);
+            portOutputFile.geometry.relative = true;
+
+
+            graph.setConnectable(true);
+            portInputText.setConnectable(true);
+            portInputFile.setConnectable(true);
+            portOutputText.setConnectable(true);
+            portOutputFile.setConnectable(true);
+            disableConnectToEdge();
+
+        } finally {
+            graph.getModel().endUpdate();
+        }
+    }
+
+    function deleteSelectedCells() {
+        graph.removeCells(graph.getSelectionCells());
+    }
+</script>
+<!--JS for toolbar-->
+<script>
+    function buttonAddFunction() {
+        console.log("Button 1 clicked");
+        // addVertex()
+        openModal()
+    }
+
+    function buttonDeleteFunction() {
+        console.log("Button 2 clicked");
+        deleteSelectedCells()
+    }
+
+    function buttonRunFunction() {
+        console.log("Button Run clicked");
+    }
+
+    function buttonRunAllFunction() {
+        console.log("Button RunAll clicked");
+        alert("not supported")
+    }
+
+    function buttonSaveFunction() {
+        console.log("Button 3 clicked");
+    }
+</script>
+
+<body onload="main(document.getElementById('graphContainer'))">
+
+<div class="toolbar">
+    <h2 style="margin-left: 20px;margin-right: 20px; flex-shrink: 0;">PipeAI</h2>
+    <div class="divider"></div>
+
+    <button onclick="buttonAddFunction()" class="toolbar-button">
+        <img src="../img/toolbar/add.png" alt="Button 1">
+    </button>
+    <button onclick="buttonDeleteFunction()" class="toolbar-button">
+        <img src="../img/toolbar/delete.png" alt="Button 2">
+    </button>
+    <button onclick="buttonRunFunction()" class="toolbar-button">
+        <img src="../img/toolbar/run.png" alt="Button 3">
+    </button>
+    <button onclick="buttonRunAllFunction()" class="toolbar-button">
+        <img src="../img/toolbar/runall.png" alt="Button 3">
+    </button>
+    <button onclick="buttonSaveFunction()" class="toolbar-button">
+        <img src="../img/toolbar/save.png" alt="Button 3">
+    </button>
+
+</div>
+
+<!--choice AI platform-->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <div id="listContainer" style="max-height: 300px; overflow-y: auto;"></div><br>
+        <button onclick="confirmSelection()">OK</button>
+    </div>
+</div>
+<script>
+    function openModal() {
+        document.getElementById("myModal").style.display = "block";
+        populateList();
+    }
+
+    function populateList() {
+        // should change to get the list from the backend
+        var items = [
+            { img: "../img/ailist/gpt3.5.png", name: "ChatGPT 3.5", description: "old ai by openai" },
+            { img: "../img/ailist/gpt4.png", name: "ChatGPT 4", description: "new ai" }
+        ];
+
+        var listContainer = document.getElementById("listContainer");
+        listContainer.innerHTML = "";
+
+        items.forEach(function(item, index) {
+            var div = document.createElement("div");
+            div.className = "list-item";
+            div.innerHTML = '<img src="' + item.img + '" width="50" height="50">' +
+                '<div><div>' + item.name + '</div>' +
+                '<div>' + item.description + '</div></div>';
+            div.onclick = function() {
+                selectItem(index,0,item.name);
+            };
+            listContainer.appendChild(div);
+        });
+    }
+    var currentSelection
+    function selectItem(index,id, name) {
+        var items = document.querySelectorAll(".list-item");
+        items.forEach(function(item, i) {
+            if (i === index) {
+                item.classList.add("selected");
+                currentSelection = { id: id, name: name };
+            }
+            else item.classList.remove("selected");
+        });
+    }
+
+    function confirmSelection() {
+        var selectedItem = document.querySelector(".list-item.selected");
+        if (selectedItem) {
+            console.log("item：", selectedItem.innerText);
+        }
+        document.getElementById("myModal").style.display = "none";
+        addVertex(currentSelection.name)
+    }
+</script>
+
+<!-- Creates a container for the graph with a grid wallpaper -->
+<div id="graphContainer" style="overflow:hidden;width:100%;height:100%;"></div>
+
+<div class="footer-bar">
+    PipeAI @ 2024 Hanzon
+</div>
+</body>
+
+</html>
