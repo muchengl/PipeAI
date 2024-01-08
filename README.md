@@ -2,7 +2,9 @@
 Use a pipeline to connect all AI platforms!<br>
 No need to switch between different AI platforms, no need to learn how to use different AI platforms. What you need is just PipeAI.
 
-![logo](./document/images/logo-tmp.png)
+<div align="center">
+<img src="./document/images/logo-tmp.png" style="width: 300px;text-align: center">
+</div>
 
 ## Dev Roadmap：
 **Phase1 PipeAI includes：**<br>
