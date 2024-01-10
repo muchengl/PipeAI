@@ -16,6 +16,9 @@ public class TestController {
         chatGPTV35.addUserInputText("Hello, who are you?");
         ResponseData responseData = chatGPTV35.run();
 
-        return JSON.toJSONString(responseData);
+        String req=chatGPTV35.getDataStreamContext().getOutputText().get(0);
+        System.out.println(req);
+
+        return req;
     }
 }

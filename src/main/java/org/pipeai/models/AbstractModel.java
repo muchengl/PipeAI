@@ -32,7 +32,7 @@ public abstract class AbstractModel {
     // for models with a "context" like ChatGPT, should add response as a system-input to old context
     abstract boolean parseResponse(ResponseData data);
 
-    // APIs for stream
+    // Stream style APIs
     abstract boolean textInput(List<String> texts);
     abstract boolean fileInput(List<String> files);
 

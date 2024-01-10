@@ -1,18 +1,18 @@
 package org.pipeai.models;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.annotation.JSONField;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.pipeai.connectors.ChatGPTV35Client;
 import org.pipeai.models.formats.DataStreamContext;
+import org.pipeai.models.formats.ModelDataAcceptance;
 import org.pipeai.models.formats.ResponseData;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.pipeai.models.formats.ModelDataAcceptance.MANDATORY;
-import static org.pipeai.models.formats.ModelDataAcceptance.NOT_ACCEPTED;
 
 @Getter
 @Setter
@@ -31,6 +31,40 @@ class Message {
 }
 
 @Getter
+@Setter
+class ChatResponse {
+    private String id;
+    private String object;
+    private long created;
+    private String model;
+    @JSONField(name = "system_fingerprint")
+    private String systemFingerprint;
+    private List<Choice> choices;
+    private Usage usage;
+}
+
+@Getter
+@Setter
+class Choice {
+    private int index;
+    private Message message;
+    private Object logprobs;
+    @JSONField(name = "finish_reason")
+    private String finishReason;
+}
+
+@Getter
+@Setter
+class Usage {
+    @JSONField(name = "prompt_tokens")
+    private int promptTokens;
+    @JSONField(name = "completion_tokens")
+    private int completionTokens;
+    @JSONField(name = "total_tokens")
+    private int totalTokens;
+}
+
+@Getter
 public class ChatGPTV35 extends AbstractModel {
     // data request to model
     ModelData modelData;
@@ -44,13 +78,13 @@ public class ChatGPTV35 extends AbstractModel {
                 new LinkedList<Message>()
         );
 
-        // ChatGPT3.5 text only
+        // ChatGPT3.5 support text only
         DataStreamContext context = new DataStreamContext();
 
-        context.setInputTextEnable(MANDATORY);
-        context.setInputFileEnable(NOT_ACCEPTED);
-        context.setOutputTextEnable(MANDATORY);
-        context.setOutputFileEnable(NOT_ACCEPTED);
+        context.setInputTextEnable(ModelDataAcceptance.MANDATORY);
+        context.setInputFileEnable(ModelDataAcceptance.NOT_ACCEPTED);
+        context.setOutputTextEnable(ModelDataAcceptance.MANDATORY);
+        context.setOutputFileEnable(ModelDataAcceptance.NOT_ACCEPTED);
 
         context.setInputText(new LinkedList<>());
         context.setOutputText(new LinkedList<>());
@@ -59,19 +93,24 @@ public class ChatGPTV35 extends AbstractModel {
     }
 
     // add a message to ChatGPT model
-    public void addModelDataMessage(String role,String content){
+    void addModelDataMessage(String role,String content){
         this.modelData.getMessages().add(
                 new Message(role,content)
         );
     }
 
-    public void addDataContext(String text){
+    void addDataContextInput(String text){
         dataStreamContext.getInputText().add(text);
         newDataCon++;
     }
 
+    void addDataContextOutput(String text){
+        dataStreamContext.getOutputText().clear();
+        dataStreamContext.getOutputText().add(text);
+    }
+
     public void addUserInputText(String text){
-        addDataContext(text);
+        addDataContextInput(text);
     }
 
     public void updateDataStreamContext(DataStreamContext newContext){
@@ -113,13 +152,22 @@ public class ChatGPTV35 extends AbstractModel {
         String response = ChatGPTV35Client.sendRequest(
                 JSON.toJSONString(this.modelData)
         );
-        System.out.println(response);
+        //System.out.println(response);
         return new ResponseData(true,response);
     }
 
     @Override
     boolean parseResponse(ResponseData data) {
-        return false;
+        String json = data.getResponse();
+        ChatResponse response=JSON.parseObject(json,ChatResponse.class);
+
+        String resp = response.getChoices().get(0).getMessage().getContent();
+
+        addDataContextOutput(resp);
+        // add this response to context
+        addModelDataMessage("assistant",resp);
+
+        return true;
     }
 
     @Override
@@ -133,7 +181,7 @@ public class ChatGPTV35 extends AbstractModel {
     @Override
     boolean fileInput(List<String> files) {
         // no file input for gpt3.5
-        return true;
+        return false;
     }
 
     @Override
