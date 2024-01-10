@@ -7,11 +7,13 @@ import org.pipeai.models.formats.ResponseData;
 import java.util.ArrayList;
 import java.util.List;
 
+// EmptyContainer, user can add anything into it, no AI model
 public class EmptyContainer extends AbstractModel{
 
     DataStreamContext dataStreamContext;
 
     EmptyContainer(){
+        modelName = "EmptyContainer";
         DataStreamContext dataStreamContext=new DataStreamContext();
         dataStreamContext.setInputTextEnable(ModelDataAcceptance.OPTIONAL);
         dataStreamContext.setInputFileEnable(ModelDataAcceptance.OPTIONAL);
@@ -47,12 +49,16 @@ public class EmptyContainer extends AbstractModel{
 
     @Override
     boolean textInput(List<String> texts) {
-        return dataStreamContext.getInputText().addAll(texts);
+        dataStreamContext.getInputText().addAll(texts);
+        dataStreamContext.getOutputText().addAll(texts);
+        return true;
     }
 
     @Override
     boolean fileInput(List<String> files) {
-        return dataStreamContext.getInputFile().addAll(files);
+        dataStreamContext.getInputFile().addAll(files);
+        dataStreamContext.getOutputFile().addAll(files);
+        return true;
     }
 
     @Override

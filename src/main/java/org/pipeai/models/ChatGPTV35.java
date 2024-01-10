@@ -73,6 +73,7 @@ public class ChatGPTV35 extends AbstractModel {
     int newDataCon;
 
     public ChatGPTV35(){
+        modelName = "ChatGPT-3.5";
         this.modelData = new ModelData(
                 "gpt-3.5-turbo",
                 new LinkedList<Message>()

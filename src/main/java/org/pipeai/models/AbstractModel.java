@@ -5,6 +5,8 @@ import org.pipeai.models.formats.ResponseData;
 import java.util.List;
 
 public abstract class AbstractModel {
+    String modelName;
+
     public ResponseData run(){
         if(!dataCheck()){
             return new ResponseData(false,"data check not pass");
