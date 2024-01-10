@@ -1,4 +1,4 @@
 chatgpt:
   api:
     url: https://api.openai.com/v1/chat/completions
-    key: your_openai_api_key
+    key: your_openai_api_key, link to get you key: https://platform.openai.com/api-keys
