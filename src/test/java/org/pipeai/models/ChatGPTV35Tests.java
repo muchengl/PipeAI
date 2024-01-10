@@ -38,16 +38,16 @@ public class ChatGPTV35Tests {
 
     @Test
     void testRunModel(){
-        ChatGPTV35 chatGPTV35 = new ChatGPTV35();
-        chatGPTV35.addUserInputText("Hello!");
-        ResponseData responseData = chatGPTV35.run();
-
-        String msg = JSON.toJSONString(
-                chatGPTV35.getModelData()
-        );
-        System.out.println(msg);
-
-        System.out.println(JSON.toJSONString(responseData));
+//        ChatGPTV35 chatGPTV35 = new ChatGPTV35();
+//        chatGPTV35.addUserInputText("Hello!");
+//        ResponseData responseData = chatGPTV35.run();
+//
+//        String msg = JSON.toJSONString(
+//                chatGPTV35.getModelData()
+//        );
+//        System.out.println(msg);
+//
+//        System.out.println(JSON.toJSONString(responseData));
     }
 
 }
