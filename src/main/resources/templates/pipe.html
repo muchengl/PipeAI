@@ -9,6 +9,8 @@
 
     <script src="../js/jquery-3.4.1.js"></script>
     <script src="../js/mxClient.min.js"></script>
+    <script src="../js/pipe/component.js"></script>
+    <script src="../js/pipe/ComponentRegister.js"></script>
 
     <title>PipeAI</title>
 
@@ -66,6 +68,7 @@
             padding: 10px 0;
         }
     </style>
+<!--    styles for AI platform selector-->
     <style>
         .modal {
             display: none;
@@ -142,6 +145,57 @@
             color: white;
         }
     </style>
+
+<!--    styles for AI platform editor-->
+    <style>
+        /* 弹窗背景 */
+        .ai-editor-modal {
+            display: none; /* 默认隐藏 */
+            position: fixed;
+            z-index: 1; /* 位于页面顶层 */
+            left: 0;
+            top: 0;
+            width: 100%; /* 全屏宽 */
+            height: 100%; /* 全屏高 */
+            overflow: auto; /* 启用滚动 */
+            background-color: rgba(0,0,0,0.4); /* 背景色，带透明度 */
+        }
+
+        /* 弹窗内容 */
+        .ai-editor-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% 顶部空间，水平居中 */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%; /* 宽度调整为50% */
+        }
+
+        /* 按钮样式 */
+        .ai-editor-content button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        .ai-editor-content button:hover {
+            opacity: 0.8;
+        }
+
+        /* 输入框样式 */
+        .ai-editor-textarea {
+            width: 100%;
+            height: 150px; /* 高度调整为150px */
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+    </style>
 </head>
 
 
@@ -149,6 +203,9 @@
 <script>
     var graph;
     var keyHandler;
+
+    var componentInEditor;
+
     function main(container)
     {
         // Checks if the browser is supported
@@ -169,10 +226,15 @@
             graph.addListener(mxEvent.DOUBLE_CLICK, function(sender, evt) {
                 var cell = evt.getProperty('cell');
                 if (cell != null) {
-                    var newText = prompt('Edit Name:', cell.value);
-                    if (newText != null) {
-                        graph.getModel().setValue(cell, newText);
-                    }
+                    // var newText = prompt('Edit Name:', cell.value);
+                    // if (newText != null) {
+                    //     graph.getModel().setValue(cell, newText);
+                    // }
+
+                    var component = componentRegister.getComponent(cell);
+                    console.log("DOUBLE_CLICK, get component: "+component.ModelName+" - "+component.ModelContextJson)
+                    componentInEditor = component;
+                    showAiEditor(component.ModelName,component.ModelContextJson)
                 }
             });
 
@@ -188,9 +250,15 @@
                         console.log("From: ", source);
                         console.log("To: ", target);
 
-                        // var edgeStyle = 'strokeColor=#FF0000;'
-                        // graph.getModel().setStyle(cell, edgeStyle);
+                        var componentFrom = componentRegister.getComponent(source);
+                        var componentTo = componentRegister.getComponent(target);
 
+
+                        componentFrom.connectTo.push(componentTo.uuid)
+                        componentFrom.connectToStyle.push(target.value)
+
+                        componentTo.connectFrom.push(componentFrom.uuid)
+                        componentTo.connectFromStyle.push(source.value)
                     }
                 });
             });
@@ -225,8 +293,8 @@
         };
     }
 
+    function addVertex(modelID,title,json,streamContext) {
 
-    function addVertex(title) {
         var parent = graph.getDefaultParent();
         graph.getModel().beginUpdate();
         try {
@@ -263,20 +331,19 @@
                 'spacingTop=2;' +
                 'spacingRight=4;';
 
-
-            var portInputText = graph.insertVertex(rectangle, 'inputText', 'inputText', 0, 0.25, 8, 8, portStyleText);
+            var portInputText = graph.insertVertex(rectangle, inputText, inputText, 0, 0.25, 8, 8, portStyleText);
             portInputText.geometry.offset = new mxPoint(-4, -4);
             portInputText.geometry.relative = true;
 
-            var portInputFile = graph.insertVertex(rectangle, 'inputFile', 'inputFile', 0, 0.75, 8, 8, portStyleFile);
+            var portInputFile = graph.insertVertex(rectangle, inputFile, inputFile, 0, 0.75, 8, 8, portStyleFile);
             portInputFile.geometry.offset = new mxPoint(-4, -4);
             portInputFile.geometry.relative = true;
 
-            var portOutputText = graph.insertVertex(rectangle, 'outputText', 'outputText', 1, 0.25, 8, 8, portStyleText);
+            var portOutputText = graph.insertVertex(rectangle, outputText, outputText, 1, 0.25, 8, 8, portStyleText);
             portOutputText.geometry.offset = new mxPoint(-4, -4);
             portOutputText.geometry.relative = true;
 
-            var portOutputFile = graph.insertVertex(rectangle, 'outputFile', 'outputFile', 1, 0.75, 8, 8, portStyleFile);
+            var portOutputFile = graph.insertVertex(rectangle, outputFile, outputFile, 1, 0.75, 8, 8, portStyleFile);
             portOutputFile.geometry.offset = new mxPoint(-4, -4);
             portOutputFile.geometry.relative = true;
 
@@ -288,9 +355,24 @@
             portOutputFile.setConnectable(true);
             disableConnectToEdge();
 
+            registerComponent(
+                modelID,
+                rectangle,
+                [portInputText,portInputFile,portOutputText,portOutputFile],
+                title,
+                json,
+                streamContext)
+            ;
+
         } finally {
             graph.getModel().endUpdate();
         }
+    }
+
+    var componentRegister = new ComponentRegister();
+    function registerComponent(modelID,cell,dots,name,json,streamContext){
+        var modelComponent = new ModelComponent(modelID,cell,dots,name,json,streamContext);
+        componentRegister.addComponent(modelComponent)
     }
 
     function deleteSelectedCells() {
@@ -343,7 +425,34 @@
         }
 
         function buttonSaveFunction() {
-            console.log("Button 3 clicked");
+            console.log("Button save clicked");
+
+
+            var objs = [];
+            for(var i=0;i<componentRegister.components.length;i++){
+                var simpleModelComponent =  new SimpleModelComponent(
+                    componentRegister.components[i]
+                )
+                objs.push(simpleModelComponent)
+            }
+
+
+            let jsonString = JSON.stringify(objs);
+            console.log(jsonString)
+            $.post({
+                url: '/pipe/save',
+                // dataType: 'json',
+                data: {
+                    pipeInfoJson: jsonString
+                },
+                success: function(response) {
+                    console.log('Response:', response);
+                },
+                error: function(xhr, status, error) {
+                    // 请求失败时的回调函数
+                    console.error('Error:', error);
+                }
+            });
         }
     </script>
 </div>
@@ -364,15 +473,28 @@
         populateList();
     }
 
-    function populateList() {
-        // should change to get the list from the backend
-        var items = [
-            { img: "../img/ailist/gpt3.5.png", name: "ChatGPT 3.5", description: "old ai by openai" },
-            { img: "../img/ailist/gpt4.png", name: "ChatGPT 4", description: "new ai" },
-            { img: "../img/ailist/sd.png", name: "Stable Diffusion Image", description: "text to image" },
-            { img: "../img/ailist/sd.png", name: "Stable Diffusion Video", description: "image to video" },
-        ];
+    // should change to get the list from the backend
+    var items = [
+        {   modelID :"Empty Container",
+            img: "../img/ailist/EmptyContainer.png",
+            name: "Empty Container",
+            description: "Container for input",
+            jsonContext: "{empty}",
+            streamContext: "{stream}",
+        },
 
+        {   modelID :"ChatGPTv35",
+            img: "../img/ailist/gpt3.5.png",
+            name: "ChatGPT 3.5",
+            description: "Amazing AI power by OpenAI",
+            jsonContext: "{gpt 3.5}",
+            streamContext: "{stream}",
+        },
+        // { img: "../img/ailist/sd.png", name: "Stable Diffusion Image", description: "text to image" },
+        // { img: "../img/ailist/sd.png", name: "Stable Diffusion Video", description: "image to video" },
+    ];
+
+    function populateList() {
         var listContainer = document.getElementById("listContainer");
         listContainer.innerHTML = "";
 
@@ -383,18 +505,32 @@
                 '<div><div style="font-weight:bold;">' + item.name + '</div>' +
                 '<div>' + item.description + '</div></div>';
             div.onclick = function() {
-                selectItem(index,0,item.name);
+                selectItem(
+                    index,
+                    item.modelID,
+                    item.name,
+                    item.jsonContext,
+                    item.streamContext);
             };
             listContainer.appendChild(div);
         });
     }
+
     var currentSelection
-    function selectItem(index,id, name) {
+    function selectItem(index,modelID, name, jsonContext, streamContext) {
         var items = document.querySelectorAll(".list-item");
+
         items.forEach(function(item, i) {
             if (i === index) {
                 item.classList.add("selected");
-                currentSelection = { id: id, name: name };
+
+                currentSelection = {
+                    modelID: modelID,
+                    name: name,
+                    jsonContext: jsonContext,
+                    streamContext:streamContext
+                };
+
             }
             else item.classList.remove("selected");
         });
@@ -406,13 +542,62 @@
             console.log("item：", selectedItem.innerText);
         }
         document.getElementById("myModal").style.display = "none";
-        addVertex(currentSelection.name)
+
+        // add cell to editor
+        addVertex(
+            currentSelection.modelID,
+            currentSelection.name,
+            currentSelection.jsonContext,
+            currentSelection.streamContext
+        )
     }
 
     function cancelSelection() {
         document.getElementById("myModal").style.display = "none";
     }
 </script>
+
+
+<div id="aiEditorModal" class="ai-editor-modal">
+    <div class="ai-editor-content">
+        <h2 id="modelName" contenteditable="true">name</h2>
+        <h5>Input context json:</h5>
+        <textarea class="ai-editor-textarea" placeholder="input json..."></textarea>
+        <button id="aiEditorConfirmButton">Confirm</button>
+    </div>
+</div>
+<script>
+    function showAiEditor(name,json) {
+        var aiEditorModal = document.getElementById("aiEditorModal");
+        aiEditorModal.style.display = "block";
+
+        $('#modelName').text(name)
+        $('.ai-editor-textarea').val(json)
+    }
+
+
+    var aiEditorModal = document.getElementById("aiEditorModal");
+    var aiEditorConfirmButton = document.getElementById("aiEditorConfirmButton");
+
+    aiEditorConfirmButton.onclick = function() {
+        aiEditorModal.style.display = "none";
+
+        // save new value
+        componentInEditor.ModelName = $('#modelName').text();
+        componentInEditor.ModelContextJson = $('.ai-editor-textarea').val();
+
+        graph.getModel().setValue(componentInEditor.cell, $('#modelName').text());
+    }
+
+    window.onclick = function(event) {
+        if (event.target == aiEditorModal) {
+            aiEditorModal.style.display = "none";
+        }
+    }
+</script>
+
+
+
 
 <!-- Creates a container for the graph with a grid wallpaper -->
 <div id="graphContainer" style="overflow:hidden;width:100%;height:100%;"></div>
