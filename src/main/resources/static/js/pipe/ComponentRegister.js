@@ -11,6 +11,11 @@ class ComponentRegister {
             this.components.length - 1
         )
 
+        this.componentsMap.set(
+            component.uuid,
+            this.components.length - 1
+        )
+
         for (let i = 0; i < component.dots.length; i++) {
             this.componentsMap.set(
                 component.dots[i],
@@ -23,16 +28,18 @@ class ComponentRegister {
         var idx = this.componentsMap.get(cell);
         return this.components[idx];
     }
+    getComponentByUUID(id){
+        var idx = this.componentsMap.get(id);
+        return this.components[idx];
+    }
 
     deleteComponent(cell){
         var idx = this.componentsMap.get(cell);
         this.componentsMap.delete(cell)
         this.components.splice(idx,1)
+
+        // should delete connection relationships
     }
 
-
-    // updateComponent(component){
-    //
-    // }
 
 }

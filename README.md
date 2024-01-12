@@ -20,3 +20,8 @@ Local model (allow user connect to local models, or models in cloud env)
 
 ## Design doc(sketchy):
 https://carpal-cornflower-8c1.notion.site/AI-Pipeline-Design-Doc-76dc31a2975e4417b6e7ee6bfcc1962f?pvs=4
+
+UI Sketch:
+<div align="center">
+<img src="./document/images/ui-sketch.png" style="width: 100%;text-align: center">
+</div>

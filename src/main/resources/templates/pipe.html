@@ -68,6 +68,7 @@
             padding: 10px 0;
         }
     </style>
+
 <!--    styles for AI platform selector-->
     <style>
         .modal {
@@ -206,68 +207,11 @@
 
     var componentInEditor;
 
-    function main(container)
-    {
-        // Checks if the browser is supported
-        if (!mxClient.isBrowserSupported())
-        {
-            mxUtils.error('Browser is not supported!', 200, false);
-        }
-        else
-        {
-            // Creates the graph inside the given container
-            graph = new mxGraph(container);
-            // graph.setConnectable(true);
-            graph.setMultigraph(false);
+    // avoid re-add edge
+    var projectInLoading = true;
 
-            // Enables rubberband selection
-            // new mxRubberband(graph);
-
-            graph.addListener(mxEvent.DOUBLE_CLICK, function(sender, evt) {
-                var cell = evt.getProperty('cell');
-                if (cell != null) {
-                    // var newText = prompt('Edit Name:', cell.value);
-                    // if (newText != null) {
-                    //     graph.getModel().setValue(cell, newText);
-                    // }
-
-                    var component = componentRegister.getComponent(cell);
-                    console.log("DOUBLE_CLICK, get component: "+component.ModelName+" - "+component.ModelContextJson)
-                    componentInEditor = component;
-                    showAiEditor(component.ModelName,component.ModelContextJson)
-                }
-            });
-
-            // monitor new edge
-            graph.addListener(mxEvent.ADD_CELLS, function(sender, evt) {
-                var cells = evt.getProperty('cells');
-
-                cells.forEach(function(cell) {
-                    if (cell.isEdge()) {
-                        var source = cell.source;
-                        var target = cell.target;
-
-                        console.log("From: ", source);
-                        console.log("To: ", target);
-
-                        var componentFrom = componentRegister.getComponent(source);
-                        var componentTo = componentRegister.getComponent(target);
-
-
-                        componentFrom.connectTo.push(componentTo.uuid)
-                        componentFrom.connectToStyle.push(target.value)
-
-                        componentTo.connectFrom.push(componentFrom.uuid)
-                        componentTo.connectFromStyle.push(source.value)
-                    }
-                });
-            });
-
-            enableGuides();
-            disableConnectToEdge();
-
-        }
-    }
+    // all cells
+    var componentRegister = new ComponentRegister();
 
     function enableGuides(){
         var graphHandler = graph.graphHandler;
@@ -293,83 +237,250 @@
         };
     }
 
-    function addVertex(modelID,title,json,streamContext) {
+    function InitPage(container)
+    {
+        // Checks if the browser is supported
+        if (!mxClient.isBrowserSupported())
+        {
+            mxUtils.error('Browser is not supported!', 200, false);
+        }
+        else
+        {
+            // Creates the graph inside the given container
+            graph = new mxGraph(container);
+            // graph.setConnectable(true);
+            graph.setMultigraph(false);
 
+            // Enables rubberband selection
+            new mxRubberband(graph);
+
+            graph.addListener(mxEvent.DOUBLE_CLICK, function(sender, evt) {
+                var cell = evt.getProperty('cell');
+                if (cell != null) {
+                    var component = componentRegister.getComponent(cell);
+                    console.log("DOUBLE_CLICK, get component: "+component.ModelName+" - "+component.ModelContextJson)
+                    componentInEditor = component;
+
+                    showAiEditor(component.ModelName,component.ModelContextJson)
+                }
+            });
+
+            // monitor new edge
+            graph.addListener(mxEvent.ADD_CELLS, function(sender, evt) {
+                var cells = evt.getProperty('cells');
+                if(projectInLoading) return;
+
+                cells.forEach(function(cell) {
+                    if (cell.isEdge()) {
+                        var source = cell.source;
+                        var target = cell.target;
+
+                        console.log("From: ", source);
+                        console.log("To: ", target);
+
+                        var componentFrom = componentRegister.getComponent(source);
+                        var componentTo = componentRegister.getComponent(target);
+
+
+                        componentFrom.connectTo.push(componentTo.uuid)
+                        componentFrom.connectToStyle.push(target.value)
+
+                        componentTo.connectFrom.push(componentFrom.uuid)
+                        componentTo.connectFromStyle.push(source.value)
+                    }
+                });
+            });
+
+            enableGuides();
+            disableConnectToEdge();
+        }
+    }
+
+    function addVertex(modelID,title,json,streamContext) {
         var parent = graph.getDefaultParent();
         graph.getModel().beginUpdate();
         try {
-            var x = Math.random() * 300;
-            var y = Math.random() * 300;
+            var x = Math.random() * 400;
+            var y = Math.random() * 400;
 
             // add rectangle
             var rectangle = graph.insertVertex(parent, 'rectangle', title, x, y, 130, 80);
 
             // add points to rectangle
-            var portStyleText = 'shape=ellipse;' +
-                'perimeter=ellipsePerimeter;' +
-                'fillColor=#FFFFFF;' +
-                'strokeColor=rgba(153,0,0,1);' +
-                'strokeWidth=1;' +
-                'fontColor=rgba(0,255,0,0);' +
-                'fontSize=12;' +
-                'fontFamily=Arial;' +
-                'align=center;' +
-                'verticalAlign=middle;' +
-                'spacingTop=2;' +
-                'spacingRight=4;';
+            // todo add dots by streamContext-enable
 
-            var portStyleFile = 'shape=ellipse;' +
-                'perimeter=ellipsePerimeter;' +
-                'fillColor=#FFFFFF;' +
-                'strokeColor=rgba(0,102,51,1);' +
-                'strokeWidth=1;' +
-                'fontColor=rgba(255,255,0,0);' +
-                'fontSize=12;' +
-                'fontFamily=Arial;' +
-                'align=center;' +
-                'verticalAlign=middle;' +
-                'spacingTop=2;' +
-                'spacingRight=4;';
-
-            var portInputText = graph.insertVertex(rectangle, inputText, inputText, 0, 0.25, 8, 8, portStyleText);
-            portInputText.geometry.offset = new mxPoint(-4, -4);
-            portInputText.geometry.relative = true;
-
-            var portInputFile = graph.insertVertex(rectangle, inputFile, inputFile, 0, 0.75, 8, 8, portStyleFile);
-            portInputFile.geometry.offset = new mxPoint(-4, -4);
-            portInputFile.geometry.relative = true;
-
-            var portOutputText = graph.insertVertex(rectangle, outputText, outputText, 1, 0.25, 8, 8, portStyleText);
-            portOutputText.geometry.offset = new mxPoint(-4, -4);
-            portOutputText.geometry.relative = true;
-
-            var portOutputFile = graph.insertVertex(rectangle, outputFile, outputFile, 1, 0.75, 8, 8, portStyleFile);
-            portOutputFile.geometry.offset = new mxPoint(-4, -4);
-            portOutputFile.geometry.relative = true;
-
+            var dots = addDots(rectangle,"")
 
             graph.setConnectable(true);
-            portInputText.setConnectable(true);
-            portInputFile.setConnectable(true);
-            portOutputText.setConnectable(true);
-            portOutputFile.setConnectable(true);
             disableConnectToEdge();
 
             registerComponent(
                 modelID,
                 rectangle,
-                [portInputText,portInputFile,portOutputText,portOutputFile],
+                dots,
                 title,
                 json,
-                streamContext)
-            ;
+                streamContext
+            );
 
         } finally {
             graph.getModel().endUpdate();
         }
     }
 
-    var componentRegister = new ComponentRegister();
+    function addDots(parent,streamContext){
+        // graph.addCell(cell, parent);
+        var portInputText = graph.insertVertex(
+            parent,
+            inputText,
+            inputText,
+            inputTextStyle[0],
+            inputTextStyle[1],
+            inputTextStyle[2],
+            inputTextStyle[3],
+            portStyleText);
+        portInputText.geometry.offset = new mxPoint(-4, -4);
+        portInputText.geometry.relative = true;
+
+        var portInputFile = graph.insertVertex(
+            parent,
+            inputFile,
+            inputFile,
+            inputFileStyle[0],
+            inputFileStyle[1],
+            inputFileStyle[2],
+            inputFileStyle[3],
+            portStyleFile);
+        portInputFile.geometry.offset = new mxPoint(-4, -4);
+        portInputFile.geometry.relative = true;
+
+        var portOutputText = graph.insertVertex(
+            parent,
+            outputText,
+            outputText,
+            outputTextStyle[0],
+            outputTextStyle[1],
+            outputTextStyle[2],
+            outputTextStyle[3],
+            portStyleText);
+        portOutputText.geometry.offset = new mxPoint(-4, -4);
+        portOutputText.geometry.relative = true;
+
+        var portOutputFile = graph.insertVertex(
+            parent,
+            outputFile,
+            outputFile,
+            outputFileStyle[0],
+            outputFileStyle[1],
+            outputFileStyle[2],
+            outputFileStyle[3],
+            portStyleFile);
+        portOutputFile.geometry.offset = new mxPoint(-4, -4);
+        portOutputFile.geometry.relative = true;
+
+        graph.setConnectable(true);
+        portInputText.setConnectable(true);
+        portInputFile.setConnectable(true);
+        portOutputText.setConnectable(true);
+        portOutputFile.setConnectable(true);
+        disableConnectToEdge();
+
+        return [portInputText,portInputFile,portOutputText,portOutputFile];
+    }
+
+    /*
+        load old project from json
+     */
+    function loadProject(){
+        $.get({
+            url: '/pipe/loadproject',
+            success: function(response) {
+                console.log('Response:', response);
+
+                loadProjectFromJSON(response);
+
+                projectInLoading = false;
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function loadProjectFromJSON(jsonData){
+        jsonData = JSON.parse(jsonData);
+        jsonData.forEach(item => {
+            var cells = addCellToGraphByComponent(graph,item);
+
+            const modelComponent = new ModelComponent(
+                item.modelID,
+                cells[0],
+                cells[1],
+                item.ModelName,
+                item.ModelContextJson,
+                item.DataStreamContext,
+            );
+            modelComponent.uuid = item.uuid;
+
+            modelComponent.connectFrom = item.connectFrom || [];
+            modelComponent.connectFromStyle = item.connectFromStyle || [];
+            modelComponent.connectTo = item.connectTo || [];
+            modelComponent.connectToStyle = item.connectToStyle || [];
+
+            componentRegister.addComponent(modelComponent);
+        });
+
+        jsonData.forEach(item => {
+            var com = componentRegister.getComponentByUUID(item.uuid)
+            addEdgeToGraphByComponent(com.cell,item)
+        });
+
+    }
+
+    function addCellToGraphByComponent(graph, data) {
+        const parent = graph.getDefaultParent();
+
+        graph.getModel().beginUpdate();
+        try {
+                const cellGeo = data.cellGeo;
+                const name = data.ModelName;
+                console.log(name+" cell:"+cellGeo.x +" "+ cellGeo.y +" "+ cellGeo.width +" "+ cellGeo.height)
+
+                var cell = graph.insertVertex(parent, "", name, cellGeo.x, cellGeo.y, cellGeo.width, cellGeo.height);
+
+                var dots = addDots(cell,"")
+
+                return [cell,dots];
+        } finally {
+            graph.getModel().endUpdate();
+        }
+    }
+
+    function addEdgeToGraphByComponent(parent,data){
+        // const parent = graph.getDefaultParent();
+
+        const uuid = data.uuid;
+        const node = componentRegister.getComponentByUUID(uuid);
+
+        const connectTo = data.connectTo;
+        const connectToStyle = data.connectToStyle;
+
+        for(var i=0;i<connectTo.length;i++){
+            var targetNodeUUID = connectTo[i];
+            var targetNodeStyle = connectToStyle[i];
+
+            var comp = componentRegister.getComponentByUUID(targetNodeUUID);
+            if(targetNodeStyle === inputText){
+                console.log("text connection")
+                var edge = graph.insertEdge(parent, null, '',node.dots[2] , comp.dots[0]);
+            }
+            else if(targetNodeStyle === inputFile){
+                console.log("file connection")
+                var edge = graph.insertEdge(parent, null, '',node.dots[3] , comp.dots[1]);
+            }
+        }
+    }
+
     function registerComponent(modelID,cell,dots,name,json,streamContext){
         var modelComponent = new ModelComponent(modelID,cell,dots,name,json,streamContext);
         componentRegister.addComponent(modelComponent)
@@ -377,11 +488,13 @@
 
     function deleteSelectedCells() {
         graph.removeCells(graph.getSelectionCells());
+
+        // todo delete from componentRegister
     }
 </script>
 
 
-<body onload="main(document.getElementById('graphContainer'))">
+<body onload="InitPage(document.getElementById('graphContainer'))">
 
 <div class="toolbar">
     <h2 style="margin-left: 20px;margin-right: 20px; flex-shrink: 0;">PipeAI</h2>
@@ -406,8 +519,7 @@
     <script>
         function buttonAddFunction() {
             console.log("Button 1 clicked");
-            // addVertex()
-            openModal()
+            openAISelection()
         }
 
         function buttonDeleteFunction() {
@@ -468,12 +580,8 @@
     </div>
 </div>
 <script>
-    function openModal() {
-        document.getElementById("myModal").style.display = "block";
-        populateList();
-    }
 
-    // should change to get the list from the backend
+    // todo should change to get the list from the backend
     var items = [
         {   modelID :"Empty Container",
             img: "../img/ailist/EmptyContainer.png",
@@ -490,9 +598,14 @@
             jsonContext: "{gpt 3.5}",
             streamContext: "{stream}",
         },
-        // { img: "../img/ailist/sd.png", name: "Stable Diffusion Image", description: "text to image" },
-        // { img: "../img/ailist/sd.png", name: "Stable Diffusion Video", description: "image to video" },
     ];
+
+    var currentSelection
+
+    function openAISelection() {
+        document.getElementById("myModal").style.display = "block";
+        populateList();
+    }
 
     function populateList() {
         var listContainer = document.getElementById("listContainer");
@@ -502,8 +615,8 @@
             var div = document.createElement("div");
             div.className = "list-item";
             div.innerHTML = '<img src="' + item.img + '" width="50" height="50">' +
-                '<div><div style="font-weight:bold;">' + item.name + '</div>' +
-                '<div>' + item.description + '</div></div>';
+                            '<div><div style="font-weight:bold;">' + item.name + '</div>' +
+                            '<div>' + item.description + '</div></div>';
             div.onclick = function() {
                 selectItem(
                     index,
@@ -512,11 +625,11 @@
                     item.jsonContext,
                     item.streamContext);
             };
+
             listContainer.appendChild(div);
         });
     }
 
-    var currentSelection
     function selectItem(index,modelID, name, jsonContext, streamContext) {
         var items = document.querySelectorAll(".list-item");
 
@@ -597,8 +710,6 @@
 </script>
 
 
-
-
 <!-- Creates a container for the graph with a grid wallpaper -->
 <div id="graphContainer" style="overflow:hidden;width:100%;height:100%;"></div>
 
@@ -608,3 +719,8 @@
 </body>
 
 </html>
+
+<script>
+
+    loadProject();
+</script>
