@@ -20,5 +20,4 @@ public enum FileFormat {
     public String toString() {
         return extension;
     }
-
 }

@@ -23,12 +23,15 @@ public class PipeAiApplication {
 
     // should design a config sys, this is just for test
     public static void init(){
+//        ApplicationHome home = new ApplicationHome(PipeAiApplication.class);
+//        System.out.println(home);
+//
+//        ChatGPTConfigWrapper config = YamlParser.parseYaml(home+"/configs/ChatGPTV35.yaml");
+//        System.out.println(JSON.toJSONString(config));
+//
+//        ChatGPTV35Client.initialize(config.getChatgpt().getApi().getUrl(),config.getChatgpt().getApi().getKey());
+
         ApplicationHome home = new ApplicationHome(PipeAiApplication.class);
-        System.out.println(home);
 
-        ChatGPTConfigWrapper config = YamlParser.parseYaml(home+"/configs/ChatGPTV35.yaml");
-        System.out.println(JSON.toJSONString(config));
-
-        ChatGPTV35Client.initialize(config.getChatgpt().getApi().getUrl(),config.getChatgpt().getApi().getKey());
     }
 }

@@ -64,12 +64,14 @@ class Usage {
     private int totalTokens;
 }
 
+
+
 @Getter
 public class ChatGPTV35 extends AbstractModel {
     // data request to model
     ModelData modelData;
-    DataStreamContext dataStreamContext;
 
+    DataStreamContext dataStreamContext;
     int newDataCon;
 
     public ChatGPTV35(){
@@ -89,6 +91,8 @@ public class ChatGPTV35 extends AbstractModel {
 
         context.setInputText(new LinkedList<>());
         context.setOutputText(new LinkedList<>());
+
+        context.setInputTextMaxNum(1);
 
         this.dataStreamContext = context;
     }

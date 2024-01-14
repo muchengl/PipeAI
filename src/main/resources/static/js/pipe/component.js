@@ -62,6 +62,8 @@ class ModelComponent{
         this.DataStreamContext = DataStreamContext;
 
         this.uuid = generateUUID();
+
+        this.editableProperties = ['ModelName', 'ModelContextJson', 'DataStreamContext'];
     }
 }
 

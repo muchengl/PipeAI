@@ -1,0 +1,10 @@
+ai_models:
+  - name: EmptyContainer
+    model_id: empty_container
+    enabled: true
+    config_file: "EmptyContainer.yaml"
+
+  - name: ChatGPT-3.5
+    model_id: chatgpt-v35
+    enabled: true
+    config_file: "ChatGPTV35.yaml"

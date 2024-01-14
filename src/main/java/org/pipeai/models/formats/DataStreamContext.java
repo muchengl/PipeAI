@@ -19,6 +19,7 @@ public class DataStreamContext {
     long inputTextMaxLength;
 
     long inputFileMaxNum;
+    long inputFileMaxSize;
 
     // NOT_ACCEPTED | OPTIONAL | MANDATORY
     ModelDataAcceptance inputTextEnable;
