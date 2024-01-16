@@ -48,26 +48,26 @@ public class EmptyContainer extends AbstractModel{
     }
 
     @Override
-    boolean textInput(List<String> texts) {
+    boolean addTextInput(List<String> texts) {
         dataStreamContext.getInputText().addAll(texts);
         dataStreamContext.getOutputText().addAll(texts);
         return true;
     }
 
     @Override
-    boolean fileInput(List<String> files) {
+    boolean addFileInput(List<String> files) {
         dataStreamContext.getInputFile().addAll(files);
         dataStreamContext.getOutputFile().addAll(files);
         return true;
     }
 
     @Override
-    List<String> textOutput() {
+    List<String> getTextOutput() {
         return dataStreamContext.getOutputText();
     }
 
     @Override
-    List<String> fileOutput() {
+    List<String> getFileOutput() {
         return dataStreamContext.getOutputFile();
     }
 }

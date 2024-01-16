@@ -15,8 +15,17 @@
     </style>
 </head>
 <body>
-
-
+<button onclick="test()"> load test project</button>
+<script>
+    function test() {
+        $.get({
+            url: '/project/load',
+            success: function(response) {
+               alert("success")
+            }
+        });
+    }
+</script>
 
 </body>
 </html>

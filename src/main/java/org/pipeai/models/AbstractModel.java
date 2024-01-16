@@ -35,9 +35,9 @@ public abstract class AbstractModel {
     abstract boolean parseResponse(ResponseData data);
 
     // Stream style APIs
-    abstract boolean textInput(List<String> texts);
-    abstract boolean fileInput(List<String> files);
+    abstract boolean addTextInput(List<String> texts);
+    abstract boolean addFileInput(List<String> files);
 
-    abstract List<String> textOutput();
-    abstract List<String> fileOutput();
+    abstract List<String> getTextOutput();
+    abstract List<String> getFileOutput();
 }

@@ -1,4 +1,4 @@
-package org.pipeai.core.controller;
+package org.pipeai.editor.controller;
 
 import com.alibaba.fastjson.JSON;
 import org.pipeai.models.ChatGPTV35;

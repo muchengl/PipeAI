@@ -1,7 +1,7 @@
-package org.pipeai.core.controller;
+package org.pipeai.editor.controller;
 
 import com.alibaba.fastjson.JSON;
-import org.pipeai.core.pojo.Model;
+import org.pipeai.core.pojo.ModelDTO;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,7 +17,7 @@ public class PipeController {
 
         testJson = pipeInfoJson;
 
-        List<Model> model = JSON.parseObject(pipeInfoJson,List.class);
+        List<ModelDTO> model = JSON.parseObject(pipeInfoJson,List.class);
         System.out.println(JSON.toJSONString(model));
 
         return "ok";

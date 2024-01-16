@@ -176,7 +176,7 @@ public class ChatGPTV35 extends AbstractModel {
     }
 
     @Override
-    boolean textInput(List<String> texts) {
+    boolean addTextInput(List<String> texts) {
         this.dataStreamContext.getInputText().addAll(
                 texts
         );
@@ -184,18 +184,18 @@ public class ChatGPTV35 extends AbstractModel {
     }
 
     @Override
-    boolean fileInput(List<String> files) {
+    boolean addFileInput(List<String> files) {
         // no file input for gpt3.5
         return false;
     }
 
     @Override
-    List<String> textOutput() {
+    List<String> getTextOutput() {
         return dataStreamContext.getOutputText();
     }
 
     @Override
-    List<String> fileOutput() {
+    List<String> getFileOutput() {
         return null;
     }
 }

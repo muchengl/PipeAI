@@ -7,7 +7,7 @@ import java.util.List;
 
 @Setter
 @Getter
-public class Model {
+public class ModelDTO {
     private String modelID;
     private CellGeo cellGeo;
     private List<String> connectFrom;
